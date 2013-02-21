@@ -1,0 +1,15 @@
+=====Overview=====
+
+Clustering framework.
+
+
+=====Build=====
+
+To build the project :
+> mkdir build
+> cd build
+> cmake ..
+> make
+
+Optionally, to run the tests:
+> make test

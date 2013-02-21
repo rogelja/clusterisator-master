@@ -1,0 +1,53 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+PROJECT(clusterisator)
+
+OPTION( WITH_TESTS "Build tests" OFF)
+OPTION( WITH_PROF "Build with profiling" OFF)
+OPTION( WITH_DEBUG "Build in debug mode" OFF)
+
+
+INCLUDE_DIRECTORIES( . )
+
+IF( WITH_TESTS )
+INCLUDE_DIRECTORIES( gmock-1.6.0/gtest/include)
+ENDIF( WITH_TESTS )
+
+
+SET ( EXECUTABLE_OUTPUT_PATH  ../bin )
+SET ( LIBRARY_OUTPUT_PATH  ../lib    )
+
+
+IF( WITH_TESTS )
+    ADD_SUBDIRECTORY(gmock-1.6.0)
+ENDIF( WITH_TESTS )
+
+
+if( WIN32 )
+	SET( CMAKE_CONFIGURATION_TYPES "Debug;Release;" CACHE STRING "limited configs" FORCE)
+	SET( CMAKE_CXX_FLAGS_DEBUG          "/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1" )
+	SET( CMAKE_CXX_FLAGS_RELEASE        "/MT /O2 /Ob2 /D NDEBUG")
+ELSE()
+	IF( WITH_DEBUG )
+		SET ( CMAKE_BUILD_TYPE "DEBUG"     )
+	ELSE( WITH_DEBUG )
+		SET ( CMAKE_BUILD_TYPE "RELEASE"     )
+	ENDIF( WITH_DEBUG )
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -pedantic -fmessage-length=0  -fPIC" )
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wconversion")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-unused-parameter")
+ENDIF( WIN32 )
+
+IF( WITH_PROF )
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+ENDIF( WITH_PROF )
+
+
+ADD_SUBDIRECTORY(clustering)
+ADD_SUBDIRECTORY(programs)
+ADD_SUBDIRECTORY(projet_zz)
+
+IF( WITH_TESTS )
+    ENABLE_TESTING()
+    ADD_SUBDIRECTORY(tests)
+ENDIF( WITH_TESTS )
+
