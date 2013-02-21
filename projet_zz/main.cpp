@@ -173,7 +173,7 @@ int main(int argc, char ** argv) {
 
 		for (size_t k(DepartClasse); k <= kmax; k+= PasClasse) {
 			size_t const levelMax(NBLevel[k/PasClasse-1]);
-			for( size_t level=0; level < levelMax ;level++){
+			for( size_t level=0; level <= levelMax ;level++){
 
 				for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
 
@@ -208,7 +208,7 @@ int main(int argc, char ** argv) {
 					sumsTime_moyenne[k/PasClasse-1][level] += sumsTime[k/PasClasse-1][Lancer][level]/((double)nbLancer);
 
 
-					// calcul de la variance par la formule E[(X- E[X])²]
+					
 
 
 
@@ -220,24 +220,27 @@ int main(int argc, char ** argv) {
 		}
 		file << std::endl;
 
+		// calcul de la variance par la formule E[(X- E[X])²]
+
+
 		for (size_t k(DepartClasse); k <= kmax; k+= PasClasse) {
 			size_t const levelMax(NBLevel[k/PasClasse-1]);
-			for( size_t level=0; level < levelMax ;level++){
+			for( size_t level=0; level <= levelMax ;level++){
 
 				for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
 
 					sumsIte_variance[k/PasClasse-1][level] += (sumsIte[k/PasClasse-1][Lancer][level]-sumsIte_moyenne[k/PasClasse-1][level])*
-						(sumsIte[k/PasClasse-1][Lancer][level]-sumsIte_moyenne[k/PasClasse-1][level])/
-						((double)nbLancer);
+																(sumsIte[k/PasClasse-1][Lancer][level]-sumsIte_moyenne[k/PasClasse-1][level])/
+																((double)nbLancer);
 					nbIte_variance[k/PasClasse-1][level] += (nbIte[k/PasClasse-1][Lancer][level]-nbIte_moyenne[k/PasClasse-1][level])*
-						(nbIte[k/PasClasse-1][Lancer][level]-nbIte_moyenne[k/PasClasse-1][level])/
-						nbLancer;
+																(nbIte[k/PasClasse-1][Lancer][level]-nbIte_moyenne[k/PasClasse-1][level])/
+																nbLancer;
 					score_variance[k/PasClasse-1][level] += (score[k/PasClasse-1][Lancer][level]-score_moyenne[k/PasClasse-1][level])*
-						(score[k/PasClasse-1][Lancer][level]-score_moyenne[k/PasClasse-1][level])/
-						((double)nbLancer);
+															 (score[k/PasClasse-1][Lancer][level]-score_moyenne[k/PasClasse-1][level])/
+															 ((double)nbLancer);
 					sumsTime_variance[k/PasClasse-1][level] += (sumsTime[k/PasClasse-1][Lancer][level]-sumsTime_moyenne[k/PasClasse-1][level])*
-						(sumsTime[k/PasClasse-1][Lancer][level]-sumsTime_moyenne[k/PasClasse-1][level])/
-						((double)nbLancer);
+																(sumsTime[k/PasClasse-1][Lancer][level]-sumsTime_moyenne[k/PasClasse-1][level])/
+																((double)nbLancer);
 
 
 				}
@@ -252,7 +255,7 @@ int main(int argc, char ** argv) {
 
 		for (size_t k(DepartClasse); k <= kmax; k+= PasClasse) {
 			size_t const levelMax(NBLevel[k/PasClasse-1]);
-			for( size_t level=0; level < levelMax ;level++){
+			for( size_t level=0; level <= levelMax ;level++){
 
 				WriteCsv(stats, i, 6);
 				WriteCsv(stats, instance.name);
