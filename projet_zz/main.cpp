@@ -113,7 +113,7 @@ int main(int argc, char ** argv) {
 		//size_t const kmax((size_t) std::ceil(instance.nbObs() * 0.15));
 
 
-		size_t const amax((size_t) std::ceil(instance.nbObs() * 0.10));
+		size_t const amax(instance.nbObs()); //(size_t) std::ceil(instance.nbObs() * 0.10));
 		std::cout << "amax = " << amax << std::endl;
 		// mais on arrete si notre algo n'est plus en multi-level.
 
