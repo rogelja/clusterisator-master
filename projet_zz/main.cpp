@@ -156,7 +156,7 @@ int main(int argc, char ** argv) {
 					for (auto const & stat : allStats[k/PasClasse-1][Lancer]) {
 						size_t const level(stat.first);
 						nbIte[k/PasClasse-1][Lancer][level] = allStats[k/PasClasse-1][Lancer][level].size();
-						score[k/PasClasse-1][Lancer][level] = allStats[k/PasClasse-1][Lancer][level].rbegin()->second._cost;
+						score[k/PasClasse-1][Lancer][level] = allStats[k/PasClasse-1][Lancer][level].begin()->second._cost;
 						for (auto & stat : allStats[k/PasClasse-1][Lancer][level]) {
 							sumsIte[k/PasClasse-1][Lancer][level] += stat.second._ite;
 							sumsTime[k/PasClasse-1][Lancer][level] += stat.second._time;
