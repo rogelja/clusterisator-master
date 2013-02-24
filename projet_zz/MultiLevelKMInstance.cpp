@@ -89,6 +89,80 @@ void MultiLevelAlgo::buildMultiLevelData(double nbNodes, double nbNodesMax) {
 	_multiLevelConstraints.back()->newCtr(1,2);
 #endif
 }
+
+
+
+
+void MultiLevelAlgo::buildMultiLevelData_seuil(double nbNodes, double nbNodesMax) {
+#if 1
+	KMPartition partition(_instance, _instance.nbObs());
+
+	bool done =false;
+
+	// on crÃƒÂ©e les singletons
+	for (size_t i(0); i < _instance.nbObs(); ++i)
+		partition.shift(i, i);
+
+	while (partition.nbLabels() > nbNodes && !done) {
+//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
+//				<< std::endl;
+		IndexedList used(partition.usedLabels());
+		done=true;
+		// definit un nouveau niveau
+		_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
+		//
+		size_t compteur(0);
+		_nbRejet=0;
+		while (!used.empty() && compteur < nbNodesMax
+				&& partition.nbLabels() > nbNodes) {
+			size_t const m = used.pop_random();
+			if (!used.empty()) {
+				// calculer la distance de ce centre avec les autres
+				std::multimap<Double, size_t> neighbor;
+				for (auto const & c : partition.usedLabels()) {
+					if (m != c)
+						neighbor.insert(
+								std::make_pair(
+										partition.getDistanceCenter(m, c), c));
+				}
+				size_t const c(neighbor.begin()->second);
+				
+				
+				if(partition.getDistanceCenter(m, c) < _seuil){
+
+					_multiLevelConstraints.back()->newCtr(
+							*partition.observations(m).begin(),
+							*partition.observations(c).begin());
+					partition.fusion(m, c);
+					// si plusieurs plusieurs plus pret : tirer au hazard (aprÃƒÂ©s)
+					used.erase(c);
+					compteur++;
+					done=false;
+				}
+				else
+					_nbRejet++;
+			}
+		};
+		// ajouter les contraintes associÃ©e Ã  ce niveau
+	};
+	std::cout << "nbNodes     " << partition.nbLabels() << std::endl;
+	std::cout << "nbNodesMax  " << nbNodesMax << std::endl;
+	std::cout << "Built       " << nbLevels() << " aggregation levels"
+			<< std::endl;
+#else
+	_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
+	_multiLevelConstraints.back()->newCtr(0,2);
+	_multiLevelConstraints.back()->newCtr(1,2);
+#endif
+}
+
+
+
+
+
+
+
+
 //
 // _step: 
 // _startLevel : niveau de dÃƒÂ©part pour le raffinement
@@ -259,3 +333,18 @@ MultiLevelAlgoStats const & MultiLevelAlgo::stats() const {
 	return _stats;
 }
 
+
+
+double MultiLevelAlgo::getSeuil(){
+	return _seuil;
+}
+
+void MultiLevelAlgo::setSeuil(double seuil){
+	_seuil=seuil;
+}
+
+
+
+size_t MultiLevelAlgo::getNbRejet(){
+	return _nbRejet;
+}

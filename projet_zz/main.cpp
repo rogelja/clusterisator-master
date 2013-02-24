@@ -21,6 +21,10 @@
 #include <iostream>
 #include <fstream>
 
+
+double CalculSeuil(double ,RegisteredInstance );
+
+
 void usage() {
 	std::cout << "Available instances : \n";
 	for (size_t i(0); i < AvailableInstances::SIZE; ++i) {
@@ -67,7 +71,7 @@ int main(int argc, char ** argv) {
 	std::ofstream file("output.csv");
 	std::ofstream stats("Stats.csv");
 
-	file << "id;nom;n;k;amax;Run;nbLevel;graine;";
+	file << "id;nom;n;k;amax;Run;nbLevel;graine;seuil;nbRejet;";
 	file << "ite0;score0;CPU0;";
 	file << "start;";
 	file << "ite;score;CPU;";
@@ -80,8 +84,8 @@ int main(int argc, char ** argv) {
 	size_t const kmax = 100;
 	size_t const PasClasse =10 ;
 	size_t const DepartClasse =10 ;
-
-
+	double const rapport = 1.50;
+	
 
 
 	for (auto const & i : list_instance) {
@@ -89,6 +93,8 @@ int main(int argc, char ** argv) {
 		RegisteredInstance instance(id);
 		instance.out();
 		// on va tester notre algo pour un nombre de classe compris [2 , 15% Nbpoint] en incrementant de 1
+
+
 
 
 		std::map<size_t, double> sumsIte_moyenne[kmax/PasClasse];
@@ -108,12 +114,16 @@ int main(int argc, char ** argv) {
 		std::map<size_t, double> score[kmax/PasClasse][nbLancer];
 		std::map<size_t, double> sumsTime[kmax/PasClasse][nbLancer];
 		size_t NBLevel[kmax/PasClasse];
+		double seuil;
 		size_t Graine[nbLancer];
+		size_t NbRejet[kmax/PasClasse];
 
 		//size_t const kmax((size_t) std::ceil(instance.nbObs() * 0.15));
 
 
-		size_t const amax(instance.nbObs()); //(size_t) std::ceil(instance.nbObs() * 0.10));
+		seuil=CalculSeuil(rapport,instance);
+
+		size_t const amax((size_t) std::ceil(instance.nbObs() * 0.05));
 		std::cout << "amax = " << amax << std::endl;
 		// mais on arrete si notre algo n'est plus en multi-level.
 
@@ -122,14 +132,21 @@ int main(int argc, char ** argv) {
 			Graine[Lancer]=rand()+1;
 			Number::SetSeed(Graine[Lancer]);
 			for (size_t k(DepartClasse); k <= kmax; k+= PasClasse) {
+				
 				MultiLevelAlgo algo(instance, k);
+				algo.setSeuil(seuil);
+				
+				NbRejet[k/PasClasse-1] = algo.getNbRejet();
 				algo.setOut(debug);
+
+				algo.buildMultiLevelData_seuil(20 * k, amax);
+
 				// on agrege 20k des noeuds par palier de 5% des noeuds totaux 
-				algo.buildMultiLevelData(20 * k, amax);
+				//algo.buildMultiLevelData(20 * k, amax);
 				Partition start(instance.nbObs(), k);
 				//generation du point de depart
 				algo.getStartPoint(start);
-
+				
 
 				NBLevel[k/PasClasse-1] = algo.nbLevels();
 
@@ -192,6 +209,9 @@ int main(int argc, char ** argv) {
 					WriteCsv(file, Lancer);
 					WriteCsv(file, levelMax);
 					WriteCsv(file, Graine[Lancer]);
+					WriteCsv(file, seuil);
+					WriteCsv(file, NbRejet[k/PasClasse-1]);
+
 					WriteCsv(file, sumsIte[k/PasClasse-1][Lancer][0]);
 					WriteCsv(file, score[k/PasClasse-1][Lancer][0], 15);
 					WriteCsv(file, sumsTime[k/PasClasse-1][Lancer][0], 6);
@@ -293,4 +313,45 @@ int main(int argc, char ** argv) {
 	//	std::cout << "Press ENTER to continue...";
 	//	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	return 0;
+}
+
+
+
+double CalculSeuil(double rapport,RegisteredInstance instance){
+	
+	
+	KMPartition partition(instance, instance.nbObs());
+	double seuil=0;
+
+	size_t k=0;
+	
+	for (size_t i(0); i < instance.nbObs(); ++i)
+		partition.shift(i, i);
+
+	IndexedList used(partition.usedLabels());
+	IndexedList neighborhood(partition.usedLabels());
+	double *MinDistance= new double[instance.nbObs()];
+
+
+		while (!used.empty() ) {
+			size_t const m = used.pop_random();
+			MinDistance[k]=INT16_MAX;
+			for (auto const & c : neighborhood) {
+				if (m != c){
+					if (MinDistance[k] > partition.getDistanceCenter(m, c))
+					{
+						MinDistance[k]= partition.getDistanceCenter(m, c);
+						//std::cout << MinDistance[k] << std::endl ;
+					}
+				}
+			}
+			k++;
+		};
+	
+	for (k=0; k < neighborhood.size();k++) {
+		seuil += MinDistance[k]/((double)neighborhood.size()) * rapport;
+	}
+	free(MinDistance);
+	std::cout << "valeur du seuil : " << seuil << std::endl ; 
+	return seuil;
 }

@@ -46,14 +46,18 @@ public:
 	// on agrÃ¨ge jusqu'Ã  ce que l'on ait nbNodes noeuds dans le problÃ¨me Ã©quivalent
 	// nbNodesMax = 0 pas de limite
 	void buildMultiLevelData(double nbNodes, double nbNodesMax = 50);
+	void buildMultiLevelData_seuil(double nbNodes, double nbNodesMax = 50);
 
 	// initialisation
 	void setStartLevel( size_t );
 	void getStartPoint( Partition  &);
 	void setStep(size_t );
+	size_t getNbRejet();
 
 	void setStartPoint( Partition  & );
 	void setOut(std::ostream & =std::cout);
+	void setSeuil(double);
+	double getSeuil();
 	//Double getDistance(SuperNoeud const & i, SuperNoeud const & j) const;
 	MultiLevelAlgoStats const & stats()const;
 	std::ostream & out();
@@ -71,6 +75,8 @@ public:
 	Number _totalKMtimer;
 	size_t _totlKMite;
 	MultiLevelAlgoStats _stats;
+	double _seuil;
+	size_t _nbRejet;
 
 };
 
