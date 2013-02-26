@@ -159,6 +159,95 @@ void MultiLevelAlgo::buildMultiLevelData_seuil(double nbNodes, double nbNodesMax
 
 
 
+void MultiLevelAlgo::buildMultiLevelData_tab(double nbNodes) {
+#if 1
+	KMPartition partition(_instance, _instance.nbObs());
+	
+	// on crÃƒÂ©e les singletons
+	for (size_t i(0); i < _instance.nbObs(); ++i)
+		partition.shift(i, i);
+
+
+
+
+
+	while (partition.nbLabels() > nbNodes ) {
+//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
+//				<< std::endl;
+		IndexedList Point(partition.usedLabels());
+		IndexedList neighborhood(partition.usedLabels());
+
+		std::map<size_t, std::map<Double,size_t > > TabDistance;
+
+		double seuil =0;
+		double distanceMin;
+		double distance;
+
+		std::cout << "Point :" << Point.size() <<std::endl;
+		std::cout << "neighborhood :"<< neighborhood.size() << std::endl;
+
+		for (auto const & m : Point)  {
+			distanceMin=INT_MAX;
+			for (auto const & c : neighborhood) {
+				if (m != c){
+					distance = partition.getDistanceCenter(m, c);
+					if (distance < distanceMin)
+					{
+						distanceMin = distance;
+					}
+					TabDistance[m].insert(std::make_pair(distance, c));
+
+					
+					
+				}
+			}
+			//il faut que chaque point ou supersommet ai un voisin au minimum
+			if(seuil < distanceMin)
+			{
+				seuil = distanceMin;
+			}
+		};
+
+		std::cout << "seuil :"<< seuil << std::endl;
+
+		// definit un nouveau niveau
+		_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
+
+		for (auto const & Point : TabDistance)  {
+			std::map<Double,size_t >::const_iterator recherche = Point.second.begin();
+			while(((*recherche).first < seuil) && (recherche != Point.second.end()))
+			{
+				//std::cout << "valdist :"<< (*recherche).first << std::endl;
+				size_t m=Point.first,
+					   c=(*recherche).second;
+
+				_multiLevelConstraints.back()->newCtr(
+					*partition.observations(m).begin(),
+					*partition.observations(c).begin());
+				partition.fusion(m, c);
+
+				recherche++;
+			}
+
+		}
+
+		std::cout << "nbNodes     " << partition.nbLabels() << std::endl;
+		std::cout << "Built       " << nbLevels() << " aggregation levels"	<< std::endl;
+
+	};
+
+
+	
+#else
+	_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
+	_multiLevelConstraints.back()->newCtr(0,2);
+	_multiLevelConstraints.back()->newCtr(1,2);
+#endif
+}
+
+
+
+
 
 
 

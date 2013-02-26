@@ -123,7 +123,7 @@ int main(int argc, char ** argv) {
 
 		seuil=CalculSeuil(rapport,instance);
 
-		size_t const amax((size_t) std::ceil(instance.nbObs() * 0.05));
+		size_t const amax((size_t) std::ceil(instance.nbObs() * 0.10));
 		std::cout << "amax = " << amax << std::endl;
 		// mais on arrete si notre algo n'est plus en multi-level.
 
@@ -139,7 +139,10 @@ int main(int argc, char ** argv) {
 				NbRejet[k/PasClasse-1] = algo.getNbRejet();
 				algo.setOut(debug);
 
-				algo.buildMultiLevelData_seuil(20 * k, amax);
+				//algo.buildMultiLevelData_seuil(20 * k, amax);
+				
+				
+				algo.buildMultiLevelData_tab(20 * k);
 
 				// on agrege 20k des noeuds par palier de 5% des noeuds totaux 
 				//algo.buildMultiLevelData(20 * k, amax);

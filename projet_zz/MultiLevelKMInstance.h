@@ -47,6 +47,7 @@ public:
 	// nbNodesMax = 0 pas de limite
 	void buildMultiLevelData(double nbNodes, double nbNodesMax = 50);
 	void buildMultiLevelData_seuil(double nbNodes, double nbNodesMax = 50);
+	void buildMultiLevelData_tab(double nbNodes);
 
 	// initialisation
 	void setStartLevel( size_t );
