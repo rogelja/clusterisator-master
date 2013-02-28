@@ -246,30 +246,29 @@ void MultiLevelAlgo::buildMultiLevelData_tab(double nbNodes) {
 			if(!TabVoisinAcceptable[i].empty())
 			{
 				fini =false;
+				// On regarde le plus proche
+				size_t NumPoint=i;
+				size_t NumVoisin=TabVoisinAcceptable[i].begin()->second ;
+
+				//on les agrege  
+
+				_multiLevelConstraints.back()->newCtr(
+					*partition.observations(NumPoint).begin(),
+					*partition.observations(NumVoisin).begin());
+				partition.fusion(NumPoint, NumVoisin);
+
+				//et on gicle ces points =p
+				std::map<Double,size_t >::iterator ite = TabVoisinAcceptable[NumVoisin].begin();
+			
+				//probleme dans cette boucle ... il y a un voisin acceptable j pour un i qui lui n'est pas dans la liste de j...
+				while((*ite).second != NumPoint)
+				{
+					std::cout << "test1 " << (*ite).second << " " << NumPoint << std::endl;
+					ite++;
+				}
+				TabVoisinAcceptable[NumVoisin].erase(ite);
+				TabVoisinAcceptable[NumPoint].erase(TabVoisinAcceptable[NumPoint].begin());
 			}
-
-
-
-			// On regarde le plus proche
-			size_t NumPoint=i;
-			size_t NumVoisin=TabVoisinAcceptable[i].begin()->second ;
-
-			//on les agrege  
-
-			_multiLevelConstraints.back()->newCtr(
-				*partition.observations(NumPoint).begin(),
-				*partition.observations(NumVoisin).begin());
-			partition.fusion(NumPoint, NumVoisin);
-
-			//et on gicle ces points =p
-			std::map<Double,size_t >::iterator ite = TabVoisinAcceptable[NumVoisin].begin();
-			while((*ite).second != NumPoint)
-			{
-				std::cout << "test1 " << (*ite).second << " " << NumPoint << std::endl;
-				ite++;
-			}
-			TabVoisinAcceptable[NumVoisin].erase(ite);
-			TabVoisinAcceptable[NumPoint].erase(0);
 
 		}
 
