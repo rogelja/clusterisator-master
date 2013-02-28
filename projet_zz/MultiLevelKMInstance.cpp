@@ -1,9 +1,9 @@
 /*
- * MultiLevelKMInstance.cpp
- *
- *  Created on: 15 dÃƒÂ©c. 2012
- *      Author: manuel
- */
+* MultiLevelKMInstance.cpp
+*
+*  Created on: 15 dÃƒÂ©c. 2012
+*      Author: manuel
+*/
 
 #include "../projet_zz/MultiLevelKMInstance.h"
 #include "../src/HMeans.hpp"
@@ -13,11 +13,11 @@
 #include <fstream>
 
 MultiLevelAlgo::MultiLevelAlgo(KMInstance const & instance, size_t k) :
-		_instance(instance), _input(_instance, k), _startPoint(
-				_instance.nbObs(), k) {
-	// par defaut sur la sortie standard.
-	setOut();
-	_step = 1;
+	_instance(instance), _input(_instance, k), _startPoint(
+	_instance.nbObs(), k) {
+		// par defaut sur la sortie standard.
+		setOut();
+		_step = 1;
 }
 
 MultiLevelAlgo::~MultiLevelAlgo() {
@@ -25,16 +25,16 @@ MultiLevelAlgo::~MultiLevelAlgo() {
 		delete ptr;
 }
 void MultiLevelAlgo::buildInstance(size_t level, KMInstance & instance,
-		Aggregations & aggregations) {
-	_instance.mustLinks().clear();
-	_instance.cannotLinks().clear();
-	for (size_t i(0); i < level; ++i) {
-		for (auto const & ctr : *_multiLevelConstraints[i]) {
-			_instance.addMustLink(ctr.first, ctr.second);
-		}
-	}
-	_instance.buildMustLink(aggregations);
-	instance = KMInstance(_instance, aggregations);
+								   Aggregations & aggregations) {
+									   _instance.mustLinks().clear();
+									   _instance.cannotLinks().clear();
+									   for (size_t i(0); i < level; ++i) {
+										   for (auto const & ctr : *_multiLevelConstraints[i]) {
+											   _instance.addMustLink(ctr.first, ctr.second);
+										   }
+									   }
+									   _instance.buildMustLink(aggregations);
+									   instance = KMInstance(_instance, aggregations);
 }
 
 // @brief construit une suite de problÃƒÂ¨mes agrÃƒÂ©gÃƒÂ©s en agrÃƒÂ©geant nbNodesMax noeuds par niveau et en produisant des graphes avec au plus nbNodes noeuds
@@ -48,41 +48,41 @@ void MultiLevelAlgo::buildMultiLevelData(double nbNodes, double nbNodesMax) {
 		partition.shift(i, i);
 
 	while (partition.nbLabels() > nbNodes) {
-//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
-//				<< std::endl;
+		//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
+		//				<< std::endl;
 		IndexedList used(partition.usedLabels());
 		// definit un nouveau niveau
 		_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
 		//
 		size_t compteur(0);
 		while (!used.empty() && compteur < nbNodesMax
-				&& partition.nbLabels() > nbNodes) {
-			size_t const m = used.pop_random();
-			if (!used.empty()) {
-				// calculer la distance de ce centre avec les autres
-				std::multimap<Double, size_t> neighbor;
-				for (auto const & c : partition.usedLabels()) {
-					if (m != c)
-						neighbor.insert(
-								std::make_pair(
-										partition.getDistanceCenter(m, c), c));
-				}
-				size_t const c(neighbor.begin()->second);
-				_multiLevelConstraints.back()->newCtr(
+			&& partition.nbLabels() > nbNodes) {
+				size_t const m = used.pop_random();
+				if (!used.empty()) {
+					// calculer la distance de ce centre avec les autres
+					std::multimap<Double, size_t> neighbor;
+					for (auto const & c : partition.usedLabels()) {
+						if (m != c)
+							neighbor.insert(
+							std::make_pair(
+							partition.getDistanceCenter(m, c), c));
+					}
+					size_t const c(neighbor.begin()->second);
+					_multiLevelConstraints.back()->newCtr(
 						*partition.observations(m).begin(),
 						*partition.observations(c).begin());
-				partition.fusion(m, c);
-				// si plusieurs plusieurs plus pret : tirer au hazard (aprÃƒÂ©s)
-				used.erase(c);
-				compteur++;
-			}
+					partition.fusion(m, c);
+					// si plusieurs plusieurs plus pret : tirer au hazard (aprÃƒÂ©s)
+					used.erase(c);
+					compteur++;
+				}
 		};
 		// ajouter les contraintes associÃ©e Ã  ce niveau
 	};
 	std::cout << "nbNodes     " << partition.nbLabels() << std::endl;
 	std::cout << "nbNodesMax  " << nbNodesMax << std::endl;
 	std::cout << "Built       " << nbLevels() << " aggregation levels"
-			<< std::endl;
+		<< std::endl;
 #else
 	_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
 	_multiLevelConstraints.back()->newCtr(0,2);
@@ -104,8 +104,8 @@ void MultiLevelAlgo::buildMultiLevelData_seuil(double nbNodes, double nbNodesMax
 		partition.shift(i, i);
 
 	while (partition.nbLabels() > nbNodes && !done) {
-//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
-//				<< std::endl;
+		//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
+		//				<< std::endl;
 		IndexedList used(partition.usedLabels());
 		done=true;
 		// definit un nouveau niveau
@@ -114,41 +114,41 @@ void MultiLevelAlgo::buildMultiLevelData_seuil(double nbNodes, double nbNodesMax
 		size_t compteur(0);
 		_nbRejet=0;
 		while (!used.empty() && compteur < nbNodesMax
-				&& partition.nbLabels() > nbNodes) {
-			size_t const m = used.pop_random();
-			if (!used.empty()) {
-				// calculer la distance de ce centre avec les autres
-				std::multimap<Double, size_t> neighbor;
-				for (auto const & c : partition.usedLabels()) {
-					if (m != c)
-						neighbor.insert(
-								std::make_pair(
-										partition.getDistanceCenter(m, c), c));
-				}
-				size_t const c(neighbor.begin()->second);
-				
-				
-				if(partition.getDistanceCenter(m, c) < _seuil){
+			&& partition.nbLabels() > nbNodes) {
+				size_t const m = used.pop_random();
+				if (!used.empty()) {
+					// calculer la distance de ce centre avec les autres
+					std::multimap<Double, size_t> neighbor;
+					for (auto const & c : partition.usedLabels()) {
+						if (m != c)
+							neighbor.insert(
+							std::make_pair(
+							partition.getDistanceCenter(m, c), c));
+					}
+					size_t const c(neighbor.begin()->second);
 
-					_multiLevelConstraints.back()->newCtr(
+
+					if(partition.getDistanceCenter(m, c) < _seuil){
+
+						_multiLevelConstraints.back()->newCtr(
 							*partition.observations(m).begin(),
 							*partition.observations(c).begin());
-					partition.fusion(m, c);
-					// si plusieurs plusieurs plus pret : tirer au hazard (aprÃƒÂ©s)
-					used.erase(c);
-					compteur++;
-					done=false;
+						partition.fusion(m, c);
+						// si plusieurs plusieurs plus pret : tirer au hazard (aprÃƒÂ©s)
+						used.erase(c);
+						compteur++;
+						done=false;
+					}
+					else
+						_nbRejet++;
 				}
-				else
-					_nbRejet++;
-			}
 		};
 		// ajouter les contraintes associÃ©e Ã  ce niveau
 	};
 	std::cout << "nbNodes     " << partition.nbLabels() << std::endl;
 	std::cout << "nbNodesMax  " << nbNodesMax << std::endl;
 	std::cout << "Built       " << nbLevels() << " aggregation levels"
-			<< std::endl;
+		<< std::endl;
 #else
 	_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
 	_multiLevelConstraints.back()->newCtr(0,2);
@@ -162,74 +162,117 @@ void MultiLevelAlgo::buildMultiLevelData_seuil(double nbNodes, double nbNodesMax
 void MultiLevelAlgo::buildMultiLevelData_tab(double nbNodes) {
 #if 1
 	KMPartition partition(_instance, _instance.nbObs());
-	
+
 	// on crÃƒÂ©e les singletons
 	for (size_t i(0); i < _instance.nbObs(); ++i)
 		partition.shift(i, i);
 
 
+	IndexedList Point(partition.usedLabels());
+	IndexedList neighborhood(partition.usedLabels());
+	std::map<size_t, std::map<Double,size_t > > TabDistance;
 
+	double seuil =0;
+	double distanceMin;
+	double distance;
 
-
-	while (partition.nbLabels() > nbNodes ) {
-//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
-//				<< std::endl;
-		IndexedList Point(partition.usedLabels());
-		IndexedList neighborhood(partition.usedLabels());
-
-		std::map<size_t, std::map<Double,size_t > > TabDistance;
-
-		double seuil =0;
-		double distanceMin;
-		double distance;
-
-		std::cout << "Point :" << Point.size() <<std::endl;
-		std::cout << "neighborhood :"<< neighborhood.size() << std::endl;
-
-		for (auto const & m : Point)  {
-			distanceMin=INT_MAX;
-			for (auto const & c : neighborhood) {
-				if (m != c){
-					distance = partition.getDistanceCenter(m, c);
-					if (distance < distanceMin)
-					{
-						distanceMin = distance;
-					}
-					TabDistance[m].insert(std::make_pair(distance, c));
-
-					
-					
+	// On calcule toutes les distances entres les points 
+	for (auto const & m : Point)  {
+		distanceMin=INT_MAX;
+		for (auto const & c : neighborhood) {
+			if (m != c){
+				distance = partition.getDistanceCenter(m, c);
+				if (distance < distanceMin)
+				{
+					distanceMin = distance;
 				}
-			}
-			//il faut que chaque point ou supersommet ai un voisin au minimum
-			if(seuil < distanceMin)
-			{
-				seuil = distanceMin;
-			}
-		};
+				TabDistance[m].insert(std::make_pair(distance, c));
 
-		std::cout << "seuil :"<< seuil << std::endl;
+
+
+			}
+		}
+		//il faut que chaque point ai un voisin au minimum
+		//donc si le seuil est plus petit que la distance mini
+		//pour un point et son voisin le plus proche, on réhausse le seuil
+		if(seuil < distanceMin)
+		{
+			seuil = distanceMin;
+		}
+
+	}
+
+	std::cout << "seuil :"<< seuil << std::endl;
+
+	//on recréé un tab de map pour chaque point avec les voisins possibles.
+
+	std::map<Double,size_t >  *TabVoisinAcceptable = new std::map<Double,size_t >[_instance.nbObs()];
+
+	for(size_t i=0; i < _instance.nbObs() ; ++i)
+	{
+		for(auto const & point : TabDistance[i])
+		{
+			if(point.first <= seuil)
+				TabVoisinAcceptable[i].insert(point);
+		}
+	}
+
+
+
+	// Ici on va essayer de parcourir, tant que necessaire, le tableau en aggrégeant pour chaque
+	// point le voisin qui lui ai le plus proche en les giclant de la map pour ne plus les reprendre ensuite
+	// il faudra biensur penser que la map est symétrique et donc i voisin de j alors j voisin de i .
+	// go .
+
+
+	bool fini =false;
+
+	while (partition.nbLabels() > nbNodes && !fini) {
+		//		std::cout << "partition.nbLabels() : " << partition.nbLabels()
+		//				<< std::endl;
 
 		// definit un nouveau niveau
+
+		fini =true;
 		_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
 
-		for (auto const & Point : TabDistance)  {
-			std::map<Double,size_t >::const_iterator recherche = Point.second.begin();
-			while(((*recherche).first < seuil) && (recherche != Point.second.end()))
+		//on parcours chaque point.
+		for(size_t i=0; i < _instance.nbObs() ; ++i)
+		{
+
+			//test servant d arret si on a plus de point a agreger alors qu'on a pas les 
+			// nbNodes necessaires.
+
+			if(!TabVoisinAcceptable[i].empty())
 			{
-				//std::cout << "valdist :"<< (*recherche).first << std::endl;
-				size_t m=Point.first,
-					   c=(*recherche).second;
-
-				_multiLevelConstraints.back()->newCtr(
-					*partition.observations(m).begin(),
-					*partition.observations(c).begin());
-				partition.fusion(m, c);
-
-				recherche++;
+				fini =false;
 			}
 
+
+
+			// On regarde le plus proche
+			size_t NumPoint=i;
+			size_t NumVoisin=TabVoisinAcceptable[i].begin()->second ;
+
+			//on les agrege  
+
+			_multiLevelConstraints.back()->newCtr(
+				*partition.observations(NumPoint).begin(),
+				*partition.observations(NumVoisin).begin());
+			partition.fusion(NumPoint, NumVoisin);
+
+			//et on gicle ces points =p
+			std::map<Double,size_t >::iterator ite = TabVoisinAcceptable[NumVoisin].begin();
+			while((*ite).second != NumPoint)
+			{
+				std::cout << "test1 " << (*ite).second << " " << NumPoint << std::endl;
+				ite++;
+			}
+			TabVoisinAcceptable[NumVoisin].erase(ite);
+			TabVoisinAcceptable[NumPoint].erase(0);
+
 		}
+
 
 		std::cout << "nbNodes     " << partition.nbLabels() << std::endl;
 		std::cout << "Built       " << nbLevels() << " aggregation levels"	<< std::endl;
@@ -237,7 +280,7 @@ void MultiLevelAlgo::buildMultiLevelData_tab(double nbNodes) {
 	};
 
 
-	
+
 #else
 	_multiLevelConstraints.push_back(new KMConstraints(_input.nbObs()));
 	_multiLevelConstraints.back()->newCtr(0,2);
@@ -294,7 +337,7 @@ void MultiLevelAlgo::refine() {
 		timer.restart();
 		HMeans<false>()(input);
 		_stats[level] = MultiLevelAlgoStat(level, input.ite(), timer.elapsed(),
-				input.cost());
+			input.cost());
 
 		// sauvegarde de la solution
 		//for (size_t i(0); i < _input.nbObs(); ++i) {
@@ -317,16 +360,16 @@ void MultiLevelAlgo::refine() {
 	// pb ici traitement du dernier niveau
 
 	/*if(level>_multiLevelConstraints.size())
-	 {
-	 // on lance l'algo
-	 HMeans<true>()(_input);
-	 out()<<"Niveau de rafinement         : " <<0<<std::endl;
-	 out()<<"Nombre d'iteration par etape : " <<_input.ite()<<std::endl;
-	 out()<<"Temps ecoule                 : " <<timer.elapsed()<<std::endl;
-	 out()<<"Valeur du cout               : " <<_input.cost()<<std::endl;
-	 out()<<std::endl;
+	{
+	// on lance l'algo
+	HMeans<true>()(_input);
+	out()<<"Niveau de rafinement         : " <<0<<std::endl;
+	out()<<"Nombre d'iteration par etape : " <<_input.ite()<<std::endl;
+	out()<<"Temps ecoule                 : " <<timer.elapsed()<<std::endl;
+	out()<<"Valeur du cout               : " <<_input.cost()<<std::endl;
+	out()<<std::endl;
 
-	 }*/
+	}*/
 }
 // @brief lance l'algorithme multi-niveau Ã  partir d'une suite d'agrÃ©gation, d'une partition de dÃ©part et d'un niveau de dÃ©part et avec un pas donnÃ©
 // _step: 
