@@ -22,8 +22,6 @@
 #include <fstream>
 
 
-double CalculSeuil(double ,RegisteredInstance );
-
 
 void usage() {
 	std::cout << "Available instances : \n";
@@ -51,7 +49,7 @@ int main(int argc, char ** argv) {
 
 	//liste des instances a tester
 	std::list<size_t> list_instance;
-	//	list_instance.push_back(0);
+	//list_instance.push_back(0);
 	//list_instance.push_back(1);
 	//list_instance.push_back(4);
 	//list_instance.push_back(7);
@@ -66,34 +64,40 @@ int main(int argc, char ** argv) {
 	//list_instance.push_back(28);
 	//list_instance.push_back(29);
 
-	// préparation de l'output qu iszera effacer à chaque run !!
 
+
+	//fichiers relevant les données de sortie et les statistiques.
 	std::ofstream file("output.csv");
 	std::ofstream stats("Stats.csv");
 
-	file << "id;nom;n;k;amax;Run;nbLevel;graine;seuil;nbRejet;";
+
+	// les informations qui nous intéressent
+	file << "id;nom;n;k;amax;Run;nbLevel;graine;";
 	file << "ite0;score0;CPU0;";
 	file << "start;";
 	file << "ite;score;CPU;";
-	//file << "Rapport Scores (%);Rapport iterations total(%); rapport iterations moyen(%);Rapport temps(%)";
 	file << std::endl;
-	// ce programme lance les tests sur toutes les instances.
+
+	//fichier de sortie pour les erreurs
 	std::ofstream debug("debug.log");
 
+
+
+	//Nb de Run lancer pour les stats
 	size_t const nbLancer = 100;
+
+	// définit le nombre de classe de départ, celle de fin et le pas d'incrément
+	size_t const DepartClasse =10 ;
 	size_t const kmax = 100;
 	size_t const PasClasse =10 ;
-	size_t const DepartClasse =10 ;
-	double const rapport = 1.50;
-	
+
+
 
 
 	for (auto const & i : list_instance) {
 		AvailableInstances id(static_cast<AvailableInstances>(i));
 		RegisteredInstance instance(id);
 		instance.out();
-		// on va tester notre algo pour un nombre de classe compris [2 , 15% Nbpoint] en incrementant de 1
-
 
 
 
@@ -106,114 +110,91 @@ int main(int argc, char ** argv) {
 		std::map<size_t, double> score_variance[kmax/PasClasse];
 		std::map<size_t, double> sumsTime_variance[kmax/PasClasse];
 
-
-
 		std::map<size_t, MultiLevelAlgoStats> allStats[kmax/PasClasse][nbLancer];
 		std::map<size_t, double> sumsIte[kmax/PasClasse][nbLancer];
 		std::map<size_t, size_t> nbIte[kmax/PasClasse][nbLancer];
 		std::map<size_t, double> score[kmax/PasClasse][nbLancer];
 		std::map<size_t, double> sumsTime[kmax/PasClasse][nbLancer];
 		size_t NBLevel[kmax/PasClasse];
-		double seuil;
 		size_t Graine[nbLancer];
-		size_t NbRejet[kmax/PasClasse];
+
 
 		//size_t const kmax((size_t) std::ceil(instance.nbObs() * 0.15));
 
-
-		seuil=CalculSeuil(rapport,instance);
-
-		size_t const amax((size_t) std::ceil(instance.nbObs() * 0.10));
-		std::cout << "amax = " << amax << std::endl;
-		// mais on arrete si notre algo n'est plus en multi-level.
-
+		// on lance nbLancer avec un germe différent
 		for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
 
+
+			//initialisation du germe pour la partie aléatoire.
 			Graine[Lancer]=rand()+1;
 			Number::SetSeed(Graine[Lancer]);
-			for (size_t k(DepartClasse); k <= kmax; k+= PasClasse) {
-				
-				MultiLevelAlgo algo(instance, k);
-				algo.setSeuil(seuil);
-				
-				NbRejet[k/PasClasse-1] = algo.getNbRejet();
+
+
+
+			for (size_t k(DepartClasse); k <= kmax; k+= PasClasse) {				
+
+
+				MultiLevelAlgo algo(instance, k);			
+
+
+
 				algo.setOut(debug);
 
-				//algo.buildMultiLevelData_seuil(20 * k, amax);
-				
-				
-				algo.buildMultiLevelData_tab(20 * k);
 
-				// on agrege 20k des noeuds par palier de 5% des noeuds totaux 
-				//algo.buildMultiLevelData(20 * k, amax);
+				//on agrège jusqu'a 20k noeuds ou alors jusqu'a deux niveaux
+				algo.buildMultiLevelData_tab(20*k);
+
 				Partition start(instance.nbObs(), k);
+
+
 				//generation du point de depart
-				algo.getStartPoint(start);
-				
+				algo.getStartPoint(start);		
+
 
 				NBLevel[k/PasClasse-1] = algo.nbLevels();
-
-
-
-
 				//on ne s'occupe aps encore du pas
 				//size_t const stepMax((size_t) std::ceil(algo.nbLevels() * 0.10));
+				size_t step=1;
+				algo.setStep(step);
 
-
-				size_t stepMax=1;
-
-				for (size_t step(1) ; step < stepMax+1 ; ++step)
-				{
-					algo.setStep(step);
-
-					for (size_t level(0); level <= algo.nbLevels(); ++level) {
-						algo.setStartPoint(start);
-						algo.setStartLevel(level);
-						algo.launch();
-						allStats[k/PasClasse-1][Lancer][level] = algo.stats();
-					}
-
-					for (auto const & stat : allStats[k/PasClasse-1][Lancer]) {
-						size_t const level(stat.first);
-						nbIte[k/PasClasse-1][Lancer][level] = allStats[k/PasClasse-1][Lancer][level].size();
-						score[k/PasClasse-1][Lancer][level] = allStats[k/PasClasse-1][Lancer][level].begin()->second._cost;
-						for (auto & stat : allStats[k/PasClasse-1][Lancer][level]) {
-							sumsIte[k/PasClasse-1][Lancer][level] += stat.second._ite;
-							sumsTime[k/PasClasse-1][Lancer][level] += stat.second._time;
-
-
-
-
-						}
-					}
-
+				for (size_t level(0); level <= algo.nbLevels(); ++level) {
+					algo.setStartPoint(start);
+					algo.setStartLevel(level);
+					algo.launch();
+					allStats[k/PasClasse-1][Lancer][level] = algo.stats();
 				}
+
+
+				//on calcule les différentes valeurs intéréssantes pour nos analyses
+
+				for (auto const & stat : allStats[k/PasClasse-1][Lancer]) {
+					size_t const level(stat.first);
+					nbIte[k/PasClasse-1][Lancer][level] = allStats[k/PasClasse-1][Lancer][level].size();
+					score[k/PasClasse-1][Lancer][level] = allStats[k/PasClasse-1][Lancer][level].begin()->second._cost;
+					for (auto & stat : allStats[k/PasClasse-1][Lancer][level]) {
+						sumsIte[k/PasClasse-1][Lancer][level] += stat.second._ite;
+						sumsTime[k/PasClasse-1][Lancer][level] += stat.second._time;
+					}
+				}
+
 			}
 		}
+
+
+		//Cette partie calcule les moyennes et variances des données relevées pendant les tests et les
+		//rédige dans les fichiers output.csv et stats.csv .
 
 		for (size_t k(DepartClasse); k <= kmax; k+= PasClasse) {
 			size_t const levelMax(NBLevel[k/PasClasse-1]);
 			for( size_t level=0; level <= levelMax ;level++){
-
 				for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
-
-
-					//double RapCost	( (scoreTot[level]-sumsCost[algo.nbLevels()])/sumsCost[algo.nbLevels()]);
-					//double RapIte	( (sumsIteTot[level]-sumsIteTot[algo.nbLevels()])/sumsIteTot[algo.nbLevels()]);
-					//double RapTime	( (sumsTimeTot[level]-sumsTimeTot[algo.nbLevels()])/sumsTimeTot[algo.nbLevels()]);
-					//double RapIteMoy( (sumsIte[level]-sumsIte[algo.nbLevels()])/sumsIte[algo.nbLevels()]);
-
-
 					WriteCsv(file, i, 6);
 					WriteCsv(file, instance.name);
 					WriteCsv(file, instance.nbObs());
 					WriteCsv(file, k);
-					WriteCsv(file, amax);
 					WriteCsv(file, Lancer);
 					WriteCsv(file, levelMax);
 					WriteCsv(file, Graine[Lancer]);
-					WriteCsv(file, seuil);
-					WriteCsv(file, NbRejet[k/PasClasse-1]);
 
 					WriteCsv(file, sumsIte[k/PasClasse-1][Lancer][0]);
 					WriteCsv(file, score[k/PasClasse-1][Lancer][0], 15);
@@ -229,15 +210,6 @@ int main(int argc, char ** argv) {
 					nbIte_moyenne[k/PasClasse-1][level] += nbIte[k/PasClasse-1][Lancer][level]/nbLancer;
 					score_moyenne[k/PasClasse-1][level] += score[k/PasClasse-1][Lancer][level]/((double)nbLancer);
 					sumsTime_moyenne[k/PasClasse-1][level] += sumsTime[k/PasClasse-1][Lancer][level]/((double)nbLancer);
-
-
-					
-
-
-
-
-
-
 				}
 			}
 		}
@@ -253,24 +225,24 @@ int main(int argc, char ** argv) {
 				for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
 
 					sumsIte_variance[k/PasClasse-1][level] += (sumsIte[k/PasClasse-1][Lancer][level]-sumsIte_moyenne[k/PasClasse-1][level])*
-																(sumsIte[k/PasClasse-1][Lancer][level]-sumsIte_moyenne[k/PasClasse-1][level])/
-																((double)nbLancer);
+						(sumsIte[k/PasClasse-1][Lancer][level]-sumsIte_moyenne[k/PasClasse-1][level])/
+						((double)nbLancer);
 					nbIte_variance[k/PasClasse-1][level] += (nbIte[k/PasClasse-1][Lancer][level]-nbIte_moyenne[k/PasClasse-1][level])*
-																(nbIte[k/PasClasse-1][Lancer][level]-nbIte_moyenne[k/PasClasse-1][level])/
-																nbLancer;
+						(nbIte[k/PasClasse-1][Lancer][level]-nbIte_moyenne[k/PasClasse-1][level])/
+						nbLancer;
 					score_variance[k/PasClasse-1][level] += (score[k/PasClasse-1][Lancer][level]-score_moyenne[k/PasClasse-1][level])*
-															 (score[k/PasClasse-1][Lancer][level]-score_moyenne[k/PasClasse-1][level])/
-															 ((double)nbLancer);
+						(score[k/PasClasse-1][Lancer][level]-score_moyenne[k/PasClasse-1][level])/
+						((double)nbLancer);
 					sumsTime_variance[k/PasClasse-1][level] += (sumsTime[k/PasClasse-1][Lancer][level]-sumsTime_moyenne[k/PasClasse-1][level])*
-																(sumsTime[k/PasClasse-1][Lancer][level]-sumsTime_moyenne[k/PasClasse-1][level])/
-																((double)nbLancer);
+						(sumsTime[k/PasClasse-1][Lancer][level]-sumsTime_moyenne[k/PasClasse-1][level])/
+						((double)nbLancer);
 
 
 				}
 			}
 		}
 
-		stats << "id;nom;n;k;amax;NbRun;nbLevel;";
+		stats << "id;nom;n;k;NbRun;nbLevel;";
 		stats << "ite0_moyenne;ite0_variance;score0_moyenne;score0_variance;CPU0_moyenne;CPU0_variance;";
 		stats << "start;";
 		stats << "ite_moyenne;ite_variance;score_moyenne;score_variance;CPU_moyenne;CPU_variance;";
@@ -284,7 +256,6 @@ int main(int argc, char ** argv) {
 				WriteCsv(stats, instance.name);
 				WriteCsv(stats, instance.nbObs());
 				WriteCsv(stats, k);
-				WriteCsv(stats, amax);
 				WriteCsv(stats, nbLancer);
 				WriteCsv(stats, levelMax);
 
@@ -320,41 +291,3 @@ int main(int argc, char ** argv) {
 
 
 
-double CalculSeuil(double rapport,RegisteredInstance instance){
-	
-	
-	KMPartition partition(instance, instance.nbObs());
-	double seuil=0;
-
-	size_t k=0;
-	
-	for (size_t i(0); i < instance.nbObs(); ++i)
-		partition.shift(i, i);
-
-	IndexedList used(partition.usedLabels());
-	IndexedList neighborhood(partition.usedLabels());
-	double *MinDistance= new double[instance.nbObs()];
-
-
-		while (!used.empty() ) {
-			size_t const m = used.pop_random();
-			MinDistance[k]=INT16_MAX;
-			for (auto const & c : neighborhood) {
-				if (m != c){
-					if (MinDistance[k] > partition.getDistanceCenter(m, c))
-					{
-						MinDistance[k]= partition.getDistanceCenter(m, c);
-						//std::cout << MinDistance[k] << std::endl ;
-					}
-				}
-			}
-			k++;
-		};
-	
-	for (k=0; k < neighborhood.size();k++) {
-		seuil += MinDistance[k]/((double)neighborhood.size()) * rapport;
-	}
-	free(MinDistance);
-	std::cout << "valeur du seuil : " << seuil << std::endl ; 
-	return seuil;
-}

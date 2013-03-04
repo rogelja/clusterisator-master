@@ -41,6 +41,12 @@ KMInstance::KMInstance(KMInstance const & instance,
 	}
 }
 
+Double KMInstance::distance(size_t i, size_t j)const{
+	Double result( 0 );
+	for (size_t d(0); d < nbAtt(); ++d)
+		result+=std::pow(get(i, d) - get(j, d), 2);
+	return std::sqrt(result);
+}
 void KMInstance::allocate(size_t nbObs, size_t nbAtt) {
 	_data = RectMatrix(nbObs, nbAtt);
 	_cst = 0;
