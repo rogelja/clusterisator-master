@@ -86,6 +86,7 @@ int main(int argc, char ** argv) {
 	//Nb de Run lancer pour les stats
 	size_t const nbLancer = 1;
 
+
 	// définit le nombre de classe de départ, celle de fin et le pas d'incrément
 	size_t const DepartClasse =10 ;
 	size_t const kmax = 100;

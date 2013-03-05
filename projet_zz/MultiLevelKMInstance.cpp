@@ -79,10 +79,12 @@ void MultiLevelAlgo::buildMultiLevelData_tab(double nbNodes) {
 	
 	//on choisit de construire au maximum 3 niveaux ou un nb de points restants supérieur supérieur a nbNodes
 	
+
 	while (partition.nbLabels() > nbNodes ) {
 		bool create(false);
 		IndexedList points(_instance.nbObs(), true);
 		while(! points.empty() && partition.nbLabels() > nbNodes  ){
+
 			size_t const point(points.pop_random());
 			for(auto const & voisin : TabDistance[point]){
 				if(points.contains(voisin.second)){
