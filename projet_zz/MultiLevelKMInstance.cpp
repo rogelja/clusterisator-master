@@ -273,7 +273,7 @@ void MultiLevelAlgo::refine() {
 		//std::cout << " input value : "<< input.computeCost() << std::endl;
 		// on lance l'algo
 		timer.restart();
-		HMeans<false>()(input);
+		HMeans<true>()(input);
 		_stats[level] = MultiLevelAlgoStat(level, input.ite(), timer.elapsed(), input.cost());
 
 		// sauvegarde de la solution
