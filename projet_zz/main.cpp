@@ -225,7 +225,7 @@ int main(int argc, char ** argv) {
 			}
 		}
 
-		stats << "id;nom;n;k;NbRun;nbLevel;seed;";
+		stats << "id;nom;n;k;NbRun;nbLevel;";
 		stats << "ite0_moyenne;ite0_variance;score0_moyenne;score0_variance;CPU0_moyenne;CPU0_variance;";
 		stats << "start;";
 		stats << "ite_moyenne;ite_variance;score_moyenne;score_variance;CPU_moyenne;CPU_variance;";
@@ -241,7 +241,6 @@ int main(int argc, char ** argv) {
 				WriteCsv(stats, k);
 				WriteCsv(stats, nbLancer);
 				WriteCsv(stats, levelMax);
-				WriteCsv(stats, seed[k/kstep-1]);
 
 				WriteCsv(stats, sumsIte_moyenne[k/kstep-1][0]);
 				WriteCsv(stats, sumsIte_variance[k/kstep-1][0]);
