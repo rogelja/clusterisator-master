@@ -54,6 +54,7 @@ int main(int argc, char ** argv) {
 
 	//on travaille sur l'instance segmentation
 	list_instance.push_back(AvailableInstances::segmentation);
+	list_instance.push_back(AvailableInstances::ionosphere);
 
 
 
@@ -113,16 +114,16 @@ int main(int argc, char ** argv) {
 
 		for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
 
+			seed[Lancer]=Lancer+1;
 
+			Number::SetSeed(seed[Lancer]);
 
 			for (size_t k(kmin); k <= kmax; k+= kstep) {	
 
 
 
 
-				seed[Lancer]=(k-kmin)/kstep+1;
-
-				Number::SetSeed(seed[Lancer]);
+				
 
 				std::cout << " ------------------------"<<k<<std::endl;
 				MultiLevelAlgo algo(instance, k);
@@ -175,9 +176,9 @@ int main(int argc, char ** argv) {
 					WriteCsv(file, k);
 					WriteCsv(file, Lancer);
 					WriteCsv(file, nbLancer);
-					WriteCsv(file, levelMax);
 					WriteCsv(file, seed[Lancer]);
-
+					WriteCsv(file, levelMax);
+					
 					WriteCsv(file, sumsIte[k/kstep-1][Lancer][0]);
 					WriteCsv(file, score[k/kstep-1][Lancer][0], 15);
 					WriteCsv(file, sumsTime[k/kstep-1][Lancer][0], 6);
@@ -224,7 +225,7 @@ int main(int argc, char ** argv) {
 			}
 		}
 
-		stats << "id;nom;n;k;NbRun;nbLevel;";
+		stats << "id;nom;n;k;NbRun;nbLevel;seed;";
 		stats << "ite0_moyenne;ite0_variance;score0_moyenne;score0_variance;CPU0_moyenne;CPU0_variance;";
 		stats << "start;";
 		stats << "ite_moyenne;ite_variance;score_moyenne;score_variance;CPU_moyenne;CPU_variance;";
@@ -240,6 +241,7 @@ int main(int argc, char ** argv) {
 				WriteCsv(stats, k);
 				WriteCsv(stats, nbLancer);
 				WriteCsv(stats, levelMax);
+				WriteCsv(stats, seed[k/kstep-1]);
 
 				WriteCsv(stats, sumsIte_moyenne[k/kstep-1][0]);
 				WriteCsv(stats, sumsIte_variance[k/kstep-1][0]);
