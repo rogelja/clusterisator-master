@@ -93,7 +93,7 @@ int main(int argc, char ** argv) {
 		RegisteredInstance instance(id);
 		instance.out();
 
-		std::map<size_t, double> sumsIte_moyenne[(kmax-kmin)/kstep +1];
+		/*std::map<size_t, double> sumsIte_moyenne[(kmax-kmin)/kstep +1];
 		std::map<size_t, size_t> nbIte_moyenne[(kmax-kmin)/kstep +1];
 		std::map<size_t, double> score_moyenne[(kmax-kmin)/kstep +1];
 		std::map<size_t, double> sumsTime_moyenne[(kmax-kmin)/kstep +1];
@@ -106,7 +106,7 @@ int main(int argc, char ** argv) {
 		std::map<size_t, double> sumsIte[(kmax-kmin)/kstep +1][nbLancer];
 		std::map<size_t, size_t> nbIte[(kmax-kmin)/kstep +1][nbLancer];
 		std::map<size_t, double> score[(kmax-kmin)/kstep +1][nbLancer];
-		std::map<size_t, double> sumsTime[(kmax-kmin)/kstep +1][nbLancer];
+		std::map<size_t, double> sumsTime[(kmax-kmin)/kstep +1][nbLancer];*/
 		size_t NBLevel[(kmax-kmin)/kstep +1];
 		size_t seed[nbLancer];
 
@@ -124,12 +124,18 @@ int main(int argc, char ** argv) {
 
 				//pour remplir les tableaux
 				size_t iteration((k-kmin)/kstep);
-
+				
 				if(k >= 10 && k <25)
 					minNodes = 10*k;
 				else if( k >= 25)
 					minNodes = 5*k;
 				
+				std::map<size_t, MultiLevelAlgoStats> allStats;
+				std::map<size_t, size_t> sumIte;
+				std::map<size_t, double> sumsTime;
+				std::map<size_t, double> score;
+
+
 
 				std::cout << " -------NbClasses--------"<<k<<std::endl;
 				std::cout << " -------minNodes---------"<<minNodes<<::std::endl;
@@ -153,20 +159,71 @@ int main(int argc, char ** argv) {
 					algo.setStartPoint(start);
 					algo.setStartLevel(level);
 					algo.launch();
-					allStats[iteration][Lancer][level] = algo.stats();
+					allStats[level] = algo.stats();
+					
+					
+					// calcul des stats				
+					sumIte[level] = 0;
+					sumsTime[level] = 0;
+
+					for(auto const & it : algo.stats()){
+					sumIte[level] += it.second._ite;
+					sumsTime[level] += it.second._time;					
 				}
+				score[level] = algo.stats().begin()->second._cost;
+			}
+			for (size_t level(0); level <= algo.nbLevels(); ++level) {				
 
 
-				//on calcule les différentes valeurs intéréssantes pour nos analyses
-				for (auto const & stat : allStats[iteration][Lancer]) {
-					size_t const level(stat.first);
-					nbIte[iteration][Lancer][level] = allStats[iteration][Lancer][level].size();
-					score[iteration][Lancer][level] = allStats[iteration][Lancer][level].begin()->second._cost;
-					for (auto & stat : allStats[iteration][Lancer][level]) {
-						sumsIte[iteration][Lancer][level]  += stat.second._ite;
-						sumsTime[iteration][Lancer][level] += stat.second._time;
-					}
-				}
+
+				WriteCsv(file, id, 6);
+				WriteCsv(file, instance.name);
+				WriteCsv(file, instance.nbObs());
+				WriteCsv(file, k);
+				WriteCsv(file, Lancer);
+				WriteCsv(file, nbLancer);
+				WriteCsv(file, seed[Lancer]);
+				WriteCsv(file, algo.nbLevels());
+
+
+
+
+				WriteCsv(file, sumIte[0]);
+				WriteCsv(file, score[0], 15);
+				WriteCsv(file, sumsTime[0], 6);
+				WriteCsv(file, level);
+				WriteCsv(file, sumIte[level]);
+				WriteCsv(file, score[level], 15);
+				WriteCsv(file, sumsTime[level], 6);
+				file << std::endl;
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+
+				//}
+
+
+				////on calcule les différentes valeurs intéréssantes pour nos analyses
+				//for (auto const & stat : allStats[iteration][Lancer]) {
+				//	size_t const level(stat.first);
+				//	score[iteration][Lancer][level] = allStats[iteration][Lancer][level].begin()->second._cost;
+				//	sumsIte[iteration][Lancer][level]=0;
+				//	sumsTime[iteration][Lancer][level]=0;
+				//	for (auto & stat : allStats[iteration][Lancer][level]) {
+				//		sumsIte[iteration][Lancer][level]  += stat.second._ite;
+				//		sumsTime[iteration][Lancer][level] += stat.second._time;
+				//	}
+				//}
 			}
 		}
 
@@ -174,40 +231,40 @@ int main(int argc, char ** argv) {
 		//Cette partie calcule les moyennes et variances des données relevées pendant les tests et les
 		//rédige dans les fichiers output.csv et stats.csv .
 
-		for (size_t k(kmin); k <= kmax; k+= kstep) {
-			//pour remplir les tableaux
-			size_t iteration((k-kmin)/kstep);
-			size_t const levelMax(NBLevel[iteration]);
-			for( size_t level=0; level <= levelMax ;level++){
-				for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
-					WriteCsv(file, id, 6);
-					WriteCsv(file, instance.name);
-					WriteCsv(file, instance.nbObs());
-					WriteCsv(file, k);
-					WriteCsv(file, Lancer);
-					WriteCsv(file, nbLancer);
-					WriteCsv(file, seed[Lancer]);
-					WriteCsv(file, levelMax);
-					
-					WriteCsv(file, sumsIte[iteration][Lancer][0]);
-					WriteCsv(file, score[iteration][Lancer][0], 15);
-					WriteCsv(file, sumsTime[iteration][Lancer][0], 6);
-					WriteCsv(file, level);
-					WriteCsv(file, sumsIte[iteration][Lancer][level]);
-					WriteCsv(file, score[iteration][Lancer][level], 15);
-					WriteCsv(file, sumsTime[iteration][Lancer][level], 6);
-					file << std::endl;
+		//for (size_t k(kmin); k <= kmax; k+= kstep) {
+		//	//pour remplir les tableaux
+		//	size_t iteration((k-kmin)/kstep);
+		//	size_t const levelMax(NBLevel[iteration]);
+		//	for( size_t level=0; level <= levelMax ;level++){
+		//		for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
+		//			WriteCsv(file, id, 6);
+		//			WriteCsv(file, instance.name);
+		//			WriteCsv(file, instance.nbObs());
+		//			WriteCsv(file, k);
+		//			WriteCsv(file, Lancer);
+		//			WriteCsv(file, nbLancer);
+		//			WriteCsv(file, seed[Lancer]);
+		//			WriteCsv(file, levelMax);
+		//			
+		//			WriteCsv(file, sumsIte[iteration][Lancer][0]);
+		//			WriteCsv(file, score[iteration][Lancer][0], 15);
+		//			WriteCsv(file, sumsTime[iteration][Lancer][0], 6);
+		//			WriteCsv(file, level);
+		//			WriteCsv(file, sumsIte[iteration][Lancer][level]);
+		//			WriteCsv(file, score[iteration][Lancer][level], 15);
+		//			WriteCsv(file, sumsTime[iteration][Lancer][level], 6);
+		//			file << std::endl;
+		//			
 
-
-					/*sumsIte_moyenne[iteration][level] += sumsIte[iteration][Lancer][level]/((double)nbLancer);
-					nbIte_moyenne[iteration][level] += nbIte[iteration][Lancer][level]/nbLancer;
-					score_moyenne[iteration][level] += score[iteration][Lancer][level]/((double)nbLancer);
-					sumsTime_moyenne[iteration][level] += sumsTime[iteration][Lancer][level]/((double)nbLancer);
-					*/
-				}
-			}
-		}
-		file << std::endl;
+		//			/*sumsIte_moyenne[iteration][level] += sumsIte[iteration][Lancer][level]/((double)nbLancer);
+		//			nbIte_moyenne[iteration][level] += nbIte[iteration][Lancer][level]/nbLancer;
+		//			score_moyenne[iteration][level] += score[iteration][Lancer][level]/((double)nbLancer);
+		//			sumsTime_moyenne[iteration][level] += sumsTime[iteration][Lancer][level]/((double)nbLancer);
+		//			*/
+		//		}
+		//	}
+		//}
+		//file << std::endl;
 
 
 		/*
