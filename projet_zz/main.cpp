@@ -83,9 +83,9 @@ int main(int argc, char ** argv) {
 
 
 	// définit le nombre de classe de départ, celle de fin et le pas d'incrément	
-	size_t const kmin (3 );
-	size_t const kstep( 1 );
-	size_t const kmax ( 10);
+	size_t const kmin (5 );
+	size_t const kstep( 5 );
+	size_t const kmax ( 50);
 
 
 
@@ -121,15 +121,19 @@ int main(int argc, char ** argv) {
 			for (size_t k(kmin); k <= kmax; k+= kstep) {	
 
 
+				size_t minNodes(20*k);
 
-
+				if(k >= 10 && k <25)
+					minNodes= 10*k;
+				else if( k>=25)
+					minNodes=5*k;
 				
 
 				std::cout << " ------------------------"<<k<<std::endl;
 				MultiLevelAlgo algo(instance, k);
 				//algo.setSeuil(seuil);				
 				algo.setOut(debug);
-				algo.buildMultiLevelData_tab(20 * k);
+				algo.buildMultiLevelData_tab(minNodes);
 				NBLevel[k/kstep-1]=algo.nbLevels();
 
 
@@ -189,15 +193,18 @@ int main(int argc, char ** argv) {
 					file << std::endl;
 
 
-					sumsIte_moyenne[k/kstep-1][level] += sumsIte[k/kstep-1][Lancer][level]/((double)nbLancer);
+					/*sumsIte_moyenne[k/kstep-1][level] += sumsIte[k/kstep-1][Lancer][level]/((double)nbLancer);
 					nbIte_moyenne[k/kstep-1][level] += nbIte[k/kstep-1][Lancer][level]/nbLancer;
 					score_moyenne[k/kstep-1][level] += score[k/kstep-1][Lancer][level]/((double)nbLancer);
 					sumsTime_moyenne[k/kstep-1][level] += sumsTime[k/kstep-1][Lancer][level]/((double)nbLancer);
+					*/
 				}
 			}
 		}
 		file << std::endl;
 
+
+		/*
 		// calcul de la variance par la formule E[(X- E[X])²]
 
 
@@ -258,7 +265,7 @@ int main(int argc, char ** argv) {
 
 				stats << std::endl;
 			}
-		}
+		}*/
 
 
 	}
