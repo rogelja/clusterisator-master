@@ -61,7 +61,7 @@ int main(int argc, char ** argv) {
 
 	//fichiers relevant les données de sortie et les statistiques.
 	std::ofstream file("output.csv");
-	std::ofstream stats("Stats.csv");
+	//std::ofstream stats("Stats.csv");
 
 
 
@@ -70,7 +70,6 @@ int main(int argc, char ** argv) {
 	file << "ite0;score0;CPU0;";
 	file << "start;";
 	file << "ite;score;CPU;";
-	//file << "Rapport Scores (%);Rapport iterations total(%); rapport iterations moyen(%);Rapport temps(%)";
 	file << std::endl;
 
 
@@ -94,21 +93,21 @@ int main(int argc, char ** argv) {
 		RegisteredInstance instance(id);
 		instance.out();
 
-		std::map<size_t, double> sumsIte_moyenne[kmax/kstep];
-		std::map<size_t, size_t> nbIte_moyenne[kmax/kstep];
-		std::map<size_t, double> score_moyenne[kmax/kstep];
-		std::map<size_t, double> sumsTime_moyenne[kmax/kstep];
-		std::map<size_t, double> sumsIte_variance[kmax/kstep];
-		std::map<size_t, size_t> nbIte_variance[kmax/kstep];
-		std::map<size_t, double> score_variance[kmax/kstep];
-		std::map<size_t, double> sumsTime_variance[kmax/kstep];
+		std::map<size_t, double> sumsIte_moyenne[(kmax-kmin)/kstep +1];
+		std::map<size_t, size_t> nbIte_moyenne[(kmax-kmin)/kstep +1];
+		std::map<size_t, double> score_moyenne[(kmax-kmin)/kstep +1];
+		std::map<size_t, double> sumsTime_moyenne[(kmax-kmin)/kstep +1];
+		std::map<size_t, double> sumsIte_variance[(kmax-kmin)/kstep +1];
+		std::map<size_t, size_t> nbIte_variance[(kmax-kmin)/kstep +1];
+		std::map<size_t, double> score_variance[(kmax-kmin)/kstep +1];
+		std::map<size_t, double> sumsTime_variance[(kmax-kmin)/kstep +1];
 
-		std::map<size_t, MultiLevelAlgoStats> allStats[kmax/kstep][nbLancer];
-		std::map<size_t, double> sumsIte[kmax/kstep][nbLancer];
-		std::map<size_t, size_t> nbIte[kmax/kstep][nbLancer];
-		std::map<size_t, double> score[kmax/kstep][nbLancer];
-		std::map<size_t, double> sumsTime[kmax/kstep][nbLancer];
-		size_t NBLevel[kmax/kstep];
+		std::map<size_t, MultiLevelAlgoStats> allStats[(kmax-kmin)/kstep +1][nbLancer];
+		std::map<size_t, double> sumsIte[(kmax-kmin)/kstep +1][nbLancer];
+		std::map<size_t, size_t> nbIte[(kmax-kmin)/kstep +1][nbLancer];
+		std::map<size_t, double> score[(kmax-kmin)/kstep +1][nbLancer];
+		std::map<size_t, double> sumsTime[(kmax-kmin)/kstep +1][nbLancer];
+		size_t NBLevel[(kmax-kmin)/kstep +1];
 		size_t seed[nbLancer];
 
 
@@ -123,18 +122,23 @@ int main(int argc, char ** argv) {
 
 				size_t minNodes(20*k);
 
+				//pour remplir les tableaux
+				size_t iteration((k-kmin)/kstep);
+
 				if(k >= 10 && k <25)
-					minNodes= 10*k;
-				else if( k>=25)
-					minNodes=5*k;
+					minNodes = 10*k;
+				else if( k >= 25)
+					minNodes = 5*k;
 				
 
-				std::cout << " ------------------------"<<k<<std::endl;
+				std::cout << " -------NbClasses--------"<<k<<std::endl;
+				std::cout << " -------minNodes---------"<<minNodes<<::std::endl;
+				std::cout << " -------iteration--------"<<iteration<<::std::endl;
 				MultiLevelAlgo algo(instance, k);
 				//algo.setSeuil(seuil);				
 				algo.setOut(debug);
 				algo.buildMultiLevelData_tab(minNodes);
-				NBLevel[k/kstep-1]=algo.nbLevels();
+				NBLevel[iteration]=algo.nbLevels();
 
 
 				//algo.buildMultiLevelData_tab(20);
@@ -149,18 +153,18 @@ int main(int argc, char ** argv) {
 					algo.setStartPoint(start);
 					algo.setStartLevel(level);
 					algo.launch();
-					allStats[k/kstep-1][Lancer][level] = algo.stats();
+					allStats[iteration][Lancer][level] = algo.stats();
 				}
 
 
 				//on calcule les différentes valeurs intéréssantes pour nos analyses
-				for (auto const & stat : allStats[k/kstep-1][Lancer]) {
+				for (auto const & stat : allStats[iteration][Lancer]) {
 					size_t const level(stat.first);
-					nbIte[k/kstep-1][Lancer][level] = allStats[k/kstep-1][Lancer][level].size();
-					score[k/kstep-1][Lancer][level] = allStats[k/kstep-1][Lancer][level].begin()->second._cost;
-					for (auto & stat : allStats[k/kstep-1][Lancer][level]) {
-						sumsIte[k/kstep-1][Lancer][level]  += stat.second._ite;
-						sumsTime[k/kstep-1][Lancer][level] += stat.second._time;
+					nbIte[iteration][Lancer][level] = allStats[iteration][Lancer][level].size();
+					score[iteration][Lancer][level] = allStats[iteration][Lancer][level].begin()->second._cost;
+					for (auto & stat : allStats[iteration][Lancer][level]) {
+						sumsIte[iteration][Lancer][level]  += stat.second._ite;
+						sumsTime[iteration][Lancer][level] += stat.second._time;
 					}
 				}
 			}
@@ -171,7 +175,9 @@ int main(int argc, char ** argv) {
 		//rédige dans les fichiers output.csv et stats.csv .
 
 		for (size_t k(kmin); k <= kmax; k+= kstep) {
-			size_t const levelMax(NBLevel[k/kstep-1]);
+			//pour remplir les tableaux
+			size_t iteration((k-kmin)/kstep);
+			size_t const levelMax(NBLevel[iteration]);
 			for( size_t level=0; level <= levelMax ;level++){
 				for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
 					WriteCsv(file, id, 6);
@@ -183,20 +189,20 @@ int main(int argc, char ** argv) {
 					WriteCsv(file, seed[Lancer]);
 					WriteCsv(file, levelMax);
 					
-					WriteCsv(file, sumsIte[k/kstep-1][Lancer][0]);
-					WriteCsv(file, score[k/kstep-1][Lancer][0], 15);
-					WriteCsv(file, sumsTime[k/kstep-1][Lancer][0], 6);
+					WriteCsv(file, sumsIte[iteration][Lancer][0]);
+					WriteCsv(file, score[iteration][Lancer][0], 15);
+					WriteCsv(file, sumsTime[iteration][Lancer][0], 6);
 					WriteCsv(file, level);
-					WriteCsv(file, sumsIte[k/kstep-1][Lancer][level]);
-					WriteCsv(file, score[k/kstep-1][Lancer][level], 15);
-					WriteCsv(file, sumsTime[k/kstep-1][Lancer][level], 6);
+					WriteCsv(file, sumsIte[iteration][Lancer][level]);
+					WriteCsv(file, score[iteration][Lancer][level], 15);
+					WriteCsv(file, sumsTime[iteration][Lancer][level], 6);
 					file << std::endl;
 
 
-					/*sumsIte_moyenne[k/kstep-1][level] += sumsIte[k/kstep-1][Lancer][level]/((double)nbLancer);
-					nbIte_moyenne[k/kstep-1][level] += nbIte[k/kstep-1][Lancer][level]/nbLancer;
-					score_moyenne[k/kstep-1][level] += score[k/kstep-1][Lancer][level]/((double)nbLancer);
-					sumsTime_moyenne[k/kstep-1][level] += sumsTime[k/kstep-1][Lancer][level]/((double)nbLancer);
+					/*sumsIte_moyenne[iteration][level] += sumsIte[iteration][Lancer][level]/((double)nbLancer);
+					nbIte_moyenne[iteration][level] += nbIte[iteration][Lancer][level]/nbLancer;
+					score_moyenne[iteration][level] += score[iteration][Lancer][level]/((double)nbLancer);
+					sumsTime_moyenne[iteration][level] += sumsTime[iteration][Lancer][level]/((double)nbLancer);
 					*/
 				}
 			}
@@ -209,22 +215,24 @@ int main(int argc, char ** argv) {
 
 
 		for (size_t k(kmin); k <= kmax; k+= kstep) {
-			size_t const levelMax(NBLevel[k/kstep-1]);
+			//pour remplir les tableaux
+			size_t iteration((k-kmin)/kstep);
+			size_t const levelMax(NBLevel[iteration]);
 			for( size_t level=0; level <= levelMax ;level++){
 
 				for( size_t Lancer=0; Lancer < nbLancer ;Lancer++){
 
-					sumsIte_variance[k/kstep-1][level] += (sumsIte[k/kstep-1][Lancer][level]-sumsIte_moyenne[k/kstep-1][level])*
-						(sumsIte[k/kstep-1][Lancer][level]-sumsIte_moyenne[k/kstep-1][level])/
+					sumsIte_variance[iteration][level] += (sumsIte[iteration][Lancer][level]-sumsIte_moyenne[iteration][level])*
+						(sumsIte[iteration][Lancer][level]-sumsIte_moyenne[iteration][level])/
 						((double)nbLancer);
-					nbIte_variance[k/kstep-1][level] += (nbIte[k/kstep-1][Lancer][level]-nbIte_moyenne[k/kstep-1][level])*
-						(nbIte[k/kstep-1][Lancer][level]-nbIte_moyenne[k/kstep-1][level])/
+					nbIte_variance[iteration][level] += (nbIte[iteration][Lancer][level]-nbIte_moyenne[iteration][level])*
+						(nbIte[iteration][Lancer][level]-nbIte_moyenne[iteration][level])/
 						nbLancer;
-					score_variance[k/kstep-1][level] += (score[k/kstep-1][Lancer][level]-score_moyenne[k/kstep-1][level])*
-						(score[k/kstep-1][Lancer][level]-score_moyenne[k/kstep-1][level])/
+					score_variance[iteration][level] += (score[iteration][Lancer][level]-score_moyenne[iteration][level])*
+						(score[iteration][Lancer][level]-score_moyenne[iteration][level])/
 						((double)nbLancer);
-					sumsTime_variance[k/kstep-1][level] += (sumsTime[k/kstep-1][Lancer][level]-sumsTime_moyenne[k/kstep-1][level])*
-						(sumsTime[k/kstep-1][Lancer][level]-sumsTime_moyenne[k/kstep-1][level])/
+					sumsTime_variance[iteration][level] += (sumsTime[iteration][Lancer][level]-sumsTime_moyenne[iteration][level])*
+						(sumsTime[iteration][Lancer][level]-sumsTime_moyenne[iteration][level])/
 						((double)nbLancer);
 
 
@@ -239,7 +247,9 @@ int main(int argc, char ** argv) {
 		stats << std::endl;
 
 		for (size_t k(kmin); k <= kmax; k+= kstep) {
-			size_t const levelMax(NBLevel[k/kstep-1]);
+			//pour remplir les tableaux
+			size_t iteration((k-kmin)/kstep);
+			size_t const levelMax(NBLevel[iteration]);
 			for( size_t level=0; level <= levelMax ;level++){
 
 				WriteCsv(stats, id, 6);
@@ -249,19 +259,19 @@ int main(int argc, char ** argv) {
 				WriteCsv(stats, nbLancer);
 				WriteCsv(stats, levelMax);
 
-				WriteCsv(stats, sumsIte_moyenne[k/kstep-1][0]);
-				WriteCsv(stats, sumsIte_variance[k/kstep-1][0]);
-				WriteCsv(stats, score_moyenne[k/kstep-1][0], 15);
-				WriteCsv(stats, score_variance[k/kstep-1][0], 15);
-				WriteCsv(stats, sumsTime_moyenne[k/kstep-1][0], 6);
-				WriteCsv(stats, sumsTime_variance[k/kstep-1][0], 6);
+				WriteCsv(stats, sumsIte_moyenne[iteration][0]);
+				WriteCsv(stats, sumsIte_variance[iteration][0]);
+				WriteCsv(stats, score_moyenne[iteration][0], 15);
+				WriteCsv(stats, score_variance[iteration][0], 15);
+				WriteCsv(stats, sumsTime_moyenne[iteration][0], 6);
+				WriteCsv(stats, sumsTime_variance[iteration][0], 6);
 				WriteCsv(stats, level);
-				WriteCsv(stats, sumsIte_moyenne[k/kstep-1][level]);
-				WriteCsv(stats, sumsIte_variance[k/kstep-1][level]);
-				WriteCsv(stats, score_moyenne[k/kstep-1][level], 15);
-				WriteCsv(stats, score_variance[k/kstep-1][level], 15);
-				WriteCsv(stats, sumsTime_moyenne[k/kstep-1][level], 6);
-				WriteCsv(stats, sumsTime_variance[k/kstep-1][level], 6);
+				WriteCsv(stats, sumsIte_moyenne[iteration][level]);
+				WriteCsv(stats, sumsIte_variance[iteration][level]);
+				WriteCsv(stats, score_moyenne[iteration][level], 15);
+				WriteCsv(stats, score_variance[iteration][level], 15);
+				WriteCsv(stats, sumsTime_moyenne[iteration][level], 6);
+				WriteCsv(stats, sumsTime_variance[iteration][level], 6);
 
 				stats << std::endl;
 			}
@@ -271,7 +281,7 @@ int main(int argc, char ** argv) {
 	}
 
 	file.close();
-	stats.close();
+	//stats.close();
 	debug.close();
 	//	std::cout << "Press ENTER to continue...";
 	//	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
